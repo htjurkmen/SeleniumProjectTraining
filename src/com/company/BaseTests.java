@@ -24,6 +24,9 @@ public class BaseTests {
     protected String password;
     protected String scrDirectory;
 
+
+    
+
     @BeforeTest
     void beforeTest() throws IOException {
         Configuration.loadConfigurations();
