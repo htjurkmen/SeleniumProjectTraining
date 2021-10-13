@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class BaseTests {
+
     private ThreadLocal <Driver> driver = new ThreadLocal<Driver>();
 
     protected Driver getDriver(){
