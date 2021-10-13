@@ -1,5 +1,10 @@
-package com.company;
+package com.company.tests;
 
+import com.company.helpers.FileHelpers;
+import com.company.pagefactory.Header;
+import com.company.pagefactory.LoginPage;
+import com.company.pagefactory.NewPost;
+import com.company.pagefactory.RegistrationForm;
 import org.testng.Assert;
 import org.testng.annotations.*;
 
@@ -72,7 +77,7 @@ public class RegistrationTests extends BaseTests {
     }
 
     @Test
-    void successfulRegistration2() throws InterruptedException {
+    void successfulRegistration2() {
 
         Header header = new Header(getDriver());
         LoginPage loginpage = header.clickLogin();
