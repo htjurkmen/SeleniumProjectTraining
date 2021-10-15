@@ -11,6 +11,7 @@ import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 public class AdvancedWebDriverInteractions {
 
@@ -28,10 +30,14 @@ public class AdvancedWebDriverInteractions {
         driver.quit();
     }
 
-    @Test
-    void basicAuth(){
+    @BeforeMethod
+    void setup() {
         driver = new ChromeDriver();
         driver.manage().window().maximize();
+    }
+
+    @Test
+    void basicAuth(){
         driver.get("http://admin:admin@the-internet.herokuapp.com/basic_auth");
         WebElement text = driver.findElement(By.xpath("//p[contains(text(), 'Congratulations!')]"));
         Assert.assertEquals(text.getText(), "Congratulations! You must have the proper credentials.");
@@ -40,8 +46,6 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void brokenImages() throws IOException {
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         //Images that should be displayed here http://the-internet.herokuapp.com/broken_images
         URL url = new URL("http://the-internet.herokuapp.com/asdf.jpg");
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -63,8 +67,6 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void challengingDom(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/challenging_dom");
         WebElement button1 = driver.findElement(By.xpath("//a[@class='button']"));
 
@@ -83,21 +85,20 @@ public class AdvancedWebDriverInteractions {
         int cellsCount = cells.size();
         int rowsCount = cellsCount / tableColumnsCount;
         String table [][] = new String[rowsCount][tableColumnsCount];
+        WebElement tableElements [][] = new WebElement[rowsCount][tableColumnsCount];
 
         for (int i = 0; i < rowsCount; i ++){
             for (int j = 0; j < tableColumnsCount; j ++){
                 String currXPath = String.format("//table/tbody//tr[%s]//td[%s]", i + 1, j + 1);
                 table[i][j] = driver.findElement(By.xpath(currXPath)).getText();
+                tableElements[i][j] = driver.findElement(By.xpath(currXPath));
             }
         }
-
         
     }
 
     @Test
     void checkboxes(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/checkboxes");
 
         WebElement checkbox1 = driver.findElement(By.xpath("(//form/input[@type='checkbox'])[1]"));
@@ -114,8 +115,6 @@ public class AdvancedWebDriverInteractions {
     @Test
         //not working
     void dragAndDrop(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/drag_and_drop");
 
         WebElement divA = driver.findElement(By.id("column-a"));
@@ -131,14 +130,16 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void dropdown(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/dropdown");
 
         WebElement dropdown = driver.findElement(By.id("dropdown"));
         Select select = new Select(dropdown);
-        select.selectByIndex(0);
+        WebElement firstOption = select.getFirstSelectedOption();
+        String selectedOption0 = select.getFirstSelectedOption().getText();
+        Assert.assertEquals(selectedOption0, "Please select an option");
+        //select.selectByIndex(0);
         select.selectByVisibleText("Option 2");
+        Assert.assertFalse(firstOption.isEnabled());
         String selectedOption = select.getFirstSelectedOption().getText();
         Assert.assertEquals(selectedOption, "Option 2");
         
@@ -146,8 +147,6 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void dynamicControl(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/dynamic_controls");
 
         By checkBoxLoc = By.id("checkbox");
@@ -167,34 +166,34 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void dynamicLoadedPageElement(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/dynamic_loading/1");
 
         By startBtnLoc = By.xpath("//div[@id='start']/button[contains(text(),'Start')]");
         By loadingBarLoc = By.id("loading");
         List<WebElement> loadingBars = driver.findElements(loadingBarLoc);
         Assert.assertTrue(loadingBars.isEmpty());
+        WebElement hello = driver.findElement(By.xpath("//div[@id='finish']/h4"));
+        Assert.assertFalse(hello.isDisplayed());
         WebElement startBtn = driver.findElement(startBtnLoc);
         startBtn.click();
         Wait wait = new WebDriverWait(driver, 10);
         wait.until(ExpectedConditions.visibilityOfElementLocated(loadingBarLoc));
         wait.until(ExpectedConditions.invisibilityOfElementLocated(loadingBarLoc));
-        WebElement hello = driver.findElement(By.xpath("//div[@id='finish']/h4"));
+        Assert.assertTrue(hello.isDisplayed());
         Assert.assertEquals(hello.getText(), "Hello World!");
         
     }
 
     @Test
     void dynamicLoadedPageElement2(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/dynamic_loading/2");
 
         By startBtnLoc = By.xpath("//div[@id='start']/button[contains(text(),'Start')]");
+        By helloWorldLoc = By.xpath("//div[@id='finish']/h4");
         By loadingBarLoc = By.id("loading");
         List<WebElement> loadingBars = driver.findElements(loadingBarLoc);
         Assert.assertTrue(loadingBars.isEmpty());
+        Assert.assertFalse(isElementPresent(driver, helloWorldLoc));
         WebElement startBtn = driver.findElement(startBtnLoc);
         startBtn.click();
         Wait wait = new WebDriverWait(driver, 10);
@@ -207,19 +206,16 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void entryAd_ModalWIndowOnEntry(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/entry_ad");
         closeModalIfAppears(driver, "modal");
         driver.navigate();
+        closeModalIfAppears(driver, "modal");
         Assert.assertFalse(isModalWindowVisible(driver, "modal"));
         
     }
 
     @Test
     void floatingMenu(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/floating_menu");
 
         WebElement floatingMenuTitle = driver.findElement(By.xpath("//h3[contains(text(), 'Floating Menu')]"));
@@ -265,8 +261,6 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void hovers(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/hovers");
 
         WebElement image1 = driver.findElement(By.xpath("(//div[@class='figure']/img)[1]"));
@@ -318,17 +312,18 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void openNewWindow(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/windows");
         String firstWindowHandle = driver.getWindowHandle();
         WebElement clickHereLink = driver.findElement(By.linkText("Click Here"));
         clickHereLink.click();
 
         // Switch to new window opened
-        for(String winHandle : driver.getWindowHandles()){
-            driver.switchTo().window(winHandle);
-        }
+        //for(String winHandle : driver.getWindowHandles()){
+         //   driver.switchTo().window(winHandle);
+       // }
+
+        List<String> alabala = (List<String>) driver.getWindowHandles();
+        driver.switchTo().window(alabala.get(0));
 
         WebElement newWindowText = driver.findElement(By.xpath("//h3[contains(text(),'New Window')]"));
         Assert.assertTrue(newWindowText.isDisplayed());
@@ -344,8 +339,6 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void infiniteScroll() throws InterruptedException {
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/infinite_scroll");
 
         WebElement infiniteScrollTitle = driver.findElement(By.xpath("//h3[contains(text(), 'Infinite Scroll')]"));
@@ -399,8 +392,6 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void iFrames(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/iframe");
         driver.switchTo().frame("mce_0_ifr");
         WebElement textField = driver.findElement(By.xpath("//body[@id='tinymce']//p"));
@@ -413,11 +404,9 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void nestedIFrames(){
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/nested_frames");
-        driver.switchTo().frame("frame-top");
-        driver.switchTo().frame("frame-left");
+        driver.switchTo().frame("frame-top").switchTo().frame("frame-left");
+        //driver.switchTo().frame("frame-left");
         WebElement leftFrameBody = driver.findElement(By.xpath("//body"));
         Assert.assertEquals(leftFrameBody.getText(), "LEFT");
         driver.switchTo().parentFrame();
@@ -432,8 +421,6 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void horizontalSlider() {
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/horizontal_slider");
         WebElement slider = driver.findElement(By.xpath("//input[@type='range']"));
         slider.click();
@@ -445,8 +432,6 @@ public class AdvancedWebDriverInteractions {
 
     @Test
     void horizontalSlider2() {
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
         driver.get("http://the-internet.herokuapp.com/horizontal_slider");
         WebElement slider = driver.findElement(By.xpath("//input[@type='range']"));
         WebElement sliderValue = driver.findElement(By.id("range"));
